@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Comprobante de Pago</title>
+    <!-- Incluir Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 700px;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .btn-custom {
+            background-color: #007BFF;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+        .btn-clear {
+            background-color: #6c757d;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-clear:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Generador de Comprobante de Pago</h2>
+        <form id="paymentForm">
+            <!-- Datos del empleado -->
+            <div class="form-group">
+                <label for="employeeName">Nombre del Empleado:</label>
+                <input type="text" id="employeeName" class="form-control" placeholder="Ingresas el nombre Hermana" required>
+            </div>
+            <div class="form-group">
+                <label for="employeeID">Cédula:</label>
+                <input type="text" id="employeeID" class="form-control" placeholder="Ingrese la cédula" required>
+            </div>
+            <div class="form-group">
+                <label for="employeePosition">Puesto:</label>
+                <input type="text" id="employeePosition" class="form-control" placeholder="Ingrese el puesto del empleado" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Correo:</label>
+                <input type="email" id="email" class="form-control" placeholder="Ingrese el correo electrónico" required>
+            </div>
+            <div class="form-group">
+                <label for="dias ">dias:</label>
+                <input type="dias" id="dias" class="form-control" placeholder="Dias laborados" required>
+            </div>
+           <!-- Rango de Fechas -->
+            <div class="form-group">
+                <label for="startDate">Fecha de Inicio:</label>
+                <input type="date" id="startDate" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="endDate">Fecha de Fin:</label>
+                <input type="date" id="endDate" class="form-control" required>
+            </div>
+
+                        <!-- Conceptos de pago -->
+            <div class="form-group">
+                <label for="salary">Salario Bruto (₡):</label>
+                <input type="number" id="salary" class="form-control" placeholder="Ingrese el salario bruto, osea lo que pusimos en el contrato" required>
+            </div>
+        
+            <div class="form-group">
+                <label for="feriado">Horas extras  (₡):</label>
+                <input type="number" id="feriado" class="form-control" placeholder="Aca pones lo equivalente para llegar a su salario dendiendo de su puesto  " required>
+            </div>
+            <div class="form-group">
+                <label for="bonuses">Bonificaciones (₡):</label>
+                <input type="number" id="bonuses" class="form-control" placeholder="Aca seria los segundos viajes" required>
+            </div>
+
+            <!-- Deducciones -->
+            
+            <div class="form-group">
+                <label for="otherDeductions">Otras Deducciones (₡):</label>
+                <input type="number" id="otherDeductions" class="form-control" placeholder="serian los pretamos o cualquier otra cosa que hay que rebajar " required>
+            </div>
+
+            <!-- Día feriado -->
+            <div class="form-group form-check">
+                <input type="checkbox" id="holiday" class="form-check-input">
+                <label for="holiday" class="form-check-label">Día Feriado de pago obligatorio</label>
+            </div>
+
+            <!-- Botones para generar PDF y limpiar campos -->
+            <button type="button" class="btn btn-custom btn-block" onclick="generatePDF()">Generar PDF</button>
+            <button type="button" class="btn btn-clear btn-block mt-2" onclick="clearForm()">Limpiar Campos</button>
+        </form>
+    </div>
+
+    <!-- Incluir jsPDF desde CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.0/jspdf.umd.min.js"></script>
+    <!-- Incluir Bootstrap JS y dependencias -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+
+   
+ function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Recoger valores del formulario
+    const companyName = "Transporte Alemán Martínez";
+    const employeeName = document.getElementById('employeeName').value;
+    const employeeID = document.getElementById('employeeID').value;
+    const employeePosition = document.getElementById('employeePosition').value;
+    const email = document.getElementById('email').value;
+    const dias = document.getElementById('dias').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const salary = parseFloat(document.getElementById('salary').value) || 0;
+
+    const feriado = parseFloat(document.getElementById('feriado').value) || 0;
+    const bonuses = parseFloat(document.getElementById('bonuses').value) || 0;
+  
+    const otherDeductions = parseFloat(document.getElementById('otherDeductions').value) || 0;
+
+    // Verificar si se marcó el día feriado
+    const isHoliday = document.getElementById('holiday').checked ? "Sí" : "No";
+
+     const salari = salary + feriado + bonuses;
+    // Calcular deducción CCSS como 10.16% del salario bruto
+    const ccssDeduction = salari * 0.1083;
+     
+
+    // Calcular salario neto
+    const totalDeductions = ccssDeduction + otherDeductions;
+    const netSalary = salary  + feriado + bonuses - totalDeductions;
+
+    // Diseño del comprobante 
+    doc.setFillColor(240, 240, 240);
+    doc.rect(0, 0, 210, 297, 'F');
+
+    // Título y encabezado
+    doc.setFontSize(16); // Tamaño para el nombre de la empresa
+    doc.setFont("Helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text(companyName, 105, 20, null, null, 'center');
+
+    doc.setFontSize(12); // Reducir tamaño de fuente para el título del comprobante
+    doc.setFont("Helvetica", "normal");
+    doc.text("Comprobante de Pago Semanal", 105, 26, null, null, 'center');
+
+    doc.setFontSize(12); // Tamaño estándar para el resto del texto
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Fecha de Inicio: ${startDate}`, 105, 35, null, null, 'center');
+    doc.text(`Fecha de Fin: ${endDate}`, 105, 40, null, null, 'center');
+ ;
+
+    // Información del empleado
+    doc.setFontSize(12);
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Nombre : ${employeeName}`, 10, 57);
+    doc.text(`Cédula: ${employeeID}`, 10, 62);
+    doc.text(`Puesto: ${employeePosition}`, 10, 67);
+    doc.text(`Correo: ${email}`, 10, 72);
+    doc.text(`Dias laborados: ${dias}`, 10, 77);
+    doc.text(`Día Feriado de pago obligatorio: ${isHoliday}`, 10, 82); // Agregar el dato de día feriado
+
+    // Conceptos de pago
+    doc.setFontSize(14);
+    doc.setFont("Helvetica", "bold");
+    doc.text('Conceptos de Pago                                       Colones', 10, 100);
+    doc.line(10, 102, 200, 102); // Línea debajo del título
+    doc.setFontSize(12);
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Salario Ordinario:                                                         ${salary.toFixed(2)}`, 10, 113);
+    doc.text(`Horas Extras :                                                              ${feriado.toFixed(2)}`, 10, 118);
+    doc.text(`Bonificaciones :                                                            ${bonuses.toFixed(2)}`, 10, 123);
+     doc.setFontSize(12);
+     doc.setFont("Helvetica", "bold");
+     doc.text(`Sub Total :                                                                   ${salari.toFixed(2)}`, 10, 128);
+
+    // Deducciones
+   doc.setFontSize(14);
+    doc.setFont("Helvetica", "bold");
+    doc.text('Deducciones de Ley                                      Colones', 10, 150);
+    doc.line(10, 152, 200, 152);
+    doc.setFontSize(12);
+    doc.setFont("Helvetica", "normal");
+   doc.text(`Deducción CCSS 10.83% :                                           ${ccssDeduction.toFixed(2)}`, 10, 165);
+    doc.text(`Otras Deducciones:                                                       ${otherDeductions.toFixed(2)}`, 10, 170);
+    doc.setFontSize(12);
+     doc.setFont("Helvetica", "bold");
+    doc.text(`Total Deducciones:                                                     ${totalDeductions.toFixed(2)}`, 10, 175);
+    // Totales
+    doc.setFontSize(14);
+    doc.setFont("Helvetica", "bold");
+    doc.text('Totales                                                             Colones', 10, 197);
+    doc.line(10, 199, 200, 199); // Línea debajo del título
+    doc.setFontSize(12);
+    doc.setFont("Helvetica", "normal");
+   doc.text(`Sub Total :                                                                    ${salari.toFixed(2)}`, 10, 210);
+    doc.text(`Total Deducciones:                                                       ${totalDeductions.toFixed(2)}`, 10, 215);
+    doc.setFontSize(13);
+     doc.setFont("Helvetica", "bold");
+    doc.text(`SALARIO NETO:                                                   ${netSalary.toFixed(2)}`, 10, 222);
+
+
+    // Guardar PDF
+    doc.save('Comprobante_de_Pago.pdf');
+}
+
+    // Función para limpiar los campos del formulario
+    function clearForm() {
+        document.getElementById('paymentForm').reset();
+    }
+    </script>
+</body>
+</html>
